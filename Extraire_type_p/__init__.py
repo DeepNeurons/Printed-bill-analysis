@@ -1,0 +1,1 @@
+from Extraire_type_p import *

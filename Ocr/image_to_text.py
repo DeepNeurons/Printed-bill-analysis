@@ -1,0 +1,89 @@
+
+
+#import cv2
+import imutils
+import json
+import matplotlib.pyplot as plt
+import numpy as np
+import os
+import pandas as pd
+import requests
+import time
+from base64 import b64encode
+from IPython.display import Image
+from pylab import rcParams
+
+
+# with open('jamah.json') as f: #/home/hb/Public/DNA/Invoice_analysis/Ocr/
+#     data = json.load(f)
+#     print(data)
+#     print()
+#     print(type(data))
+
+data = {'type': 'service_account', 'project_id': 'jamah-e6e58', 'private_key_id': '55b960338cf6784fba646d1d343031dec90c797c', 'private_key': '-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCV6RqUtWXZPc0U\nsy2PYhp45nPIBvhntT7bRT7XszFEkJgyvmVfcTlO/WSCBjAXgIfEC+XezTBU0JYr\n2UdkzZUfJpVQQJ7+Z8MbUynAqBlgo+6dv1xKilApG8LP/9FMFLNKJX43CgW0eUCK\n0BJFC8p+1fxoe3qB5mDUGN359OJr1fMDc9FvU4+QP0mbvbU7oMhYxzt+30RE4nwv\nT5QjLTUhWHRUKuPpCEABC82EHkzfgVFSMAHvolqnAyhsSeL0m16YXnVZmC/OUF69\nCHsXVLAnE4uKu+frSCJQ5++f/Eot3GImnmKD1iN23ZKWNVb2R9A26FtOBFfxwQ1p\nApV8Sp8dAgMBAAECggEASXxROWCKoql25JTI2qaej3F4hC9WiZABVf9lxNrkZdXz\npbxLeTPJgf0Yzdw2qu6onuOuNT+kV49AbhI+ux1D4ldJjmN/DPrUW4qyxuwgNI1n\npRBvL2MJ1Hz1THz8nizvjoM+kcBp94QQrXs92XbkNrSy3IzbCt5hzNa7yZHPhEhG\nm5N8t6+N/EIe2Re8Jws8SkWFgXIIugw3guw154pWss9ni74xZBmVkdH3X9+iZGdG\nyGtKkTiLwzFVZaEwAnJHU34OWFcoqEsnbP5aHlSbG5zoFzcPHksnEXO3ltrHVmzz\nsh/2PYhGUVRJf6bG/dAr632KThJ0nmSipys+2gVDyQKBgQDF2helxz8JSTrbpCt7\nhhCdwFSd2QcCUbo29ACA41h7cf0P6sWkl8GvRvnmO/M1aEL9baS2I5z78FthiHlM\ncA7j4pofoPME0H7UgpH0AOp2J/oHTIOjI6tDenHgPJYn1FTpBYnDJxxkGAiHHxoY\nP+DrJo3+gHLgIyLL6n6HPa7AVwKBgQDB+AR/VW1s074Kt1blpmVRAhjkERspKrDr\nfvLjN2oGB/uzwQ1sj51IVCOVkqq7IAWElV4GxMbO9iwptYdDeMC9SB+kAHpyurll\nsvNKodQFwKAkD4/z50MRtGGOd6LmwDHTTzzQNsJKhY4NvqmXYfUGeJY9iYasSB0f\nuYhDTjXjqwKBgFlNmHDmXyiE2kE7d7j4iVV683aP+B7u3rthJT0H4O9PQydFE9K4\nAN9pjPCDzMIlfl8/dyITLw90rPp4DDAZQE9R/7kY/7gDl8u558EYDLwqTSuwOJaR\nSgNaKD5Leocdyvmm20ivxZvUUT0UJ8YcRxw8ucjPF4rdsR4TiOroR5FfAoGATb0z\nQD1iv80VS4IzZ5MK5C6s/ysD8bnUcm3MttgMvCIS9PYYhTwB0201XcsMdjbdP0gG\nCTxwWZ48EPNaJOaOiM4RME+ow7ame2X/MBgvu6Z6CDncfepf7QaYWtsEBOtejMwj\nGWf48pkYV9XkbnGqHE/UFxG5Ue8NDRv0ytTbsEUCgYADPMjcMw8245BPgRZh1LS0\nv4bn5A1NOvf0PKqVrdKznS+eGb1yrq0loHJp7Hx2i0cY/If3G4nO8jBpg4KgbGpa\nXRjJ1IyMd1QfRtqVrR6VpSqNQGomq4BkrRBgbCbhxV0KHusmZXYnr9qwr+RSaU5R\nPPwHOIi6scXLu4juMLvG1g==\n-----END PRIVATE KEY-----\n', 'client_email': 'firebase-adminsdk-od8nd@jamah-e6e58.iam.gserviceaccount.com', 'client_id': '108952854681826754101', 'auth_uri': 'https://accounts.google.com/o/oauth2/auth', 'token_uri': 'https://oauth2.googleapis.com/token', 'auth_provider_x509_cert_url': 'https://www.googleapis.com/oauth2/v1/certs', 'client_x509_cert_url': 'https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-od8nd%40jamah-e6e58.iam.gserviceaccount.com'}
+url = 'https://vision.googleapis.com/v1/images:annotate'
+api_key = 'AIzaSyDOQ4gFyIPJqwnH5fJselRcMZRA6-hG3dw'
+
+
+def makeImageData(img):
+    
+    img_req = None
+    
+    ctxt = b64encode(img).decode()
+    img_req = {
+        'image': {
+            'content': ctxt
+        },
+        'features': [{
+            'type': 'DOCUMENT_TEXT_DETECTION',
+            'maxResults': 1
+        }]
+    }
+    
+    return json.dumps({"requests": img_req}).encode()
+
+def requestOCR(url, api_key, img):
+    imgdata = makeImageData(img)
+    response = requests.post(url, 
+                            data = imgdata, 
+                            params = {'key': api_key}, 
+                            headers = {'Content-Type': 'application/json'})
+    return response
+
+
+
+
+
+####################################
+##########################################""
+####################################""""""""""""#
+
+'''
+def makeImageData(imgpath):
+    
+    img_req = None
+    with open(imgpath, 'rb') as f:    
+        ctxt = b64encode(f.read()).decode()
+        img_req = {
+            'image': {
+                'content': ctxt
+            },
+            'features': [{
+                'type': 'DOCUMENT_TEXT_DETECTION',
+                'maxResults': 1
+            }]
+        }
+    
+    return json.dumps({"requests": img_req}).encode()
+
+def requestOCR(url, api_key, imgpath):
+    imgdata = makeImageData(imgpath)
+    response = requests.post(url, 
+                            data = imgdata, 
+                            params = {'key': api_key}, 
+                            headers = {'Content-Type': 'application/json'})
+    return response  
+'''
+# imgpath = 'vill_di.png'
+# response = requestOCR('https://vision.googleapis.com/v1/images:annotate', 'AIzaSyDOQ4gFyIPJqwnH5fJselRcMZRA6-hG3dw', imgpath)
+# print(response.json()['responses'][0]['textAnnotations'][0]["description"].split('\n'))
